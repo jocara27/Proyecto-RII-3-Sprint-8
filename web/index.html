@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gemelo Digital Robot Móvil</title>
+  <link rel="stylesheet" href="/web/style.css">
+</head>
+
+<body>
+  <header>
+    <div class="header-title">Gemelo digital robot móvil - Eurobot</div>
+    <div class="header-status" id="topStatus">Conectando...</div>
+  </header>
+
+  <main>
+    <section id="visualSection">
+
+      <div id="mapContainer">
+        <canvas id="mapCanvas" width="960" height="650"></canvas>
+      </div>
+
+      <div id="cameraPanel">
+        <div class="cameraHeader">
+          <span>Cámara brazo / ROI</span>
+          <span id="cameraStatus">/camera/color/image_raw</span>
+        </div>
+
+        <div class="cameraContent">
+
+          <div class="cameraSide">
+            <h3>ROI</h3>
+
+            <label>X</label>
+            <input id="roiX" type="number" step="1" onchange="updateROIFromInputs()">
+
+            <label>Y</label>
+            <input id="roiY" type="number" step="1" onchange="updateROIFromInputs()">
+
+            <label>Anchura W</label>
+            <input id="roiW" type="number" step="1" onchange="updateROIFromInputs()">
+
+            <label>Altura H</label>
+            <input id="roiH" type="number" step="1" onchange="updateROIFromInputs()">
+
+            <button class="primary" onclick="saveROI()">Guardar ROI</button>
+            <button onclick="centerROI()">Centrar ROI</button>
+          </div>
+
+          <div id="cameraImageWrap">
+            <img
+              id="cameraStream"
+              alt="Stream cámara"
+              src="http://192.168.111.122:8080/stream?topic=/camera/color/image_raw">
+
+            <canvas id="roiCanvas" width="640" height="480"></canvas>
+          </div>
+
+          <div class="cameraSide">
+            <h3>Estado</h3>
+
+            <div class="small-status" id="roiState">
+              ROI pendiente: /arm_camera/piece_in_roi
+            </div>
+
+            <p class="hint">
+              Arrastra el rectángulo ROI sobre la imagen.
+              Arrastra desde la esquina inferior derecha para cambiar tamaño.
+            </p>
+
+            <p class="hint">
+              camera_roi.py detecta el ArUco dentro del ROI y publica /arm_camera/piece_in_roi.
+            </p>
+          </div>
+
+        </div>
+
+        <div class="cameraFooter">
+          <span id="roiFooter">ROI no cargado.</span>
+        </div>
+      </div>
+
+    </section>
+
+    <aside id="sidePanel">
+
+      <section class="card">
+        <h2>Iniciar misión</h2>
+
+        <label>Almacenes a visitar</label>
+
+        <div id="missionSequenceList" class="mission-list">
+          <p class="hint">Cargando mission_sequence...</p>
+        </div>
+
+        <div class="row">
+          <button type="button" onclick="selectAllMissionStorages()">Todos</button>
+          <button type="button" onclick="clearMissionStorages()">Ninguno</button>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Vel. lineal ruta</label>
+            <input id="missionLinearSpeed" type="number" step="0.005" min="0.005" max="0.12" value="0.03">
+          </div>
+          <div>
+            <label>Vel. angular</label>
+            <input id="missionAngularSpeed" type="number" step="0.01" min="0.05" max="0.40" value="0.15">
+          </div>
+        </div>
+
+        <label>Vel. slow pick</label>
+        <input id="missionSlowPickSpeed" type="number" step="0.001" min="0.003" max="0.04" value="0.015">
+
+        <button onclick="preparePickPlace()">Preparar / validar misión</button>
+        <button class="execute" onclick="runPickPlace()">START misión</button>
+
+        <p class="hint">
+          Secuencia: START → almacén seleccionado → slow pick ROI → vacuum ON → PICK → HOME brazo →
+          despensa asociada → PLACE → vacuum OFF → HOME brazo → siguiente almacén o START final.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Ruta manual / debug</h2>
+
+        <label>Origen</label>
+        <select id="originSelect"></select>
+
+        <label>Destino</label>
+        <select id="destSelect"></select>
+
+        <button class="primary" onclick="planRoute()">Planificar</button>
+        <button class="execute" onclick="executeRoute()">Ejecutar ruta</button>
+
+        <p class="hint">
+          Esta sección es solo para pruebas manuales de navegación. La misión completa se ejecuta desde “Iniciar misión”.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Editar mapa</h2>
+
+        <label>Tipo</label>
+        <select id="itemType" onchange="onTypeChanged()">
+          <option value="almacenes">Almacén negro fijo 250x100</option>
+          <option value="despensas">Despensa verde fija 200x200</option>
+          <option value="approach_almacenes">Approach almacén azul</option>
+          <option value="approach_despensas">Approach despensa verde</option>
+          <option value="transit">Transit rojo sin theta</option>
+          <option value="forbidden_zones">Zona prohibida roja</option>
+        </select>
+
+        <label>Nombre</label>
+        <input id="itemName" placeholder="Ej: Palm1, Desp1, T_Desp1_Palm2">
+
+        <div class="row">
+          <div>
+            <label>X altura</label>
+            <input id="itemX" type="number" step="1">
+          </div>
+          <div>
+            <label>Y anchura</label>
+            <input id="itemY" type="number" step="1">
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Tamaño X</label>
+            <input id="itemW" type="number" step="1" readonly>
+          </div>
+          <div>
+            <label>Tamaño Y</label>
+            <input id="itemH" type="number" step="1" readonly>
+          </div>
+        </div>
+
+        <label>Theta grados</label>
+        <input id="itemTheta" type="number" step="1" placeholder="solo approach">
+
+        <div id="transitAssignmentBox" style="display:none;">
+          <h3>Asignación transit</h3>
+
+          <label>Ciclo misión</label>
+          <select id="transitMissionStorage">
+            <option value="Palm1">Palm1 → Desp1</option>
+          </select>
+
+          <label>Este transit pertenece a</label>
+          <select id="transitRole">
+            <option value="from_previous_transit">Despensa anterior → almacén actual</option>
+            <option value="storage_to_pantry_transit">Almacén actual → despensa actual</option>
+            <option value="pantry_to_home_transit">Despensa actual → START</option>
+          </select>
+
+          <label>Orden dentro del tramo</label>
+          <input id="transitOrder" type="number" step="1" min="1" value="1">
+
+          <p class="hint">
+            Si hay varios transit en el mismo tramo, el orden define la ruta:
+            T1 → T2 → T3. Al borrar un transit, también se elimina de mission_sequence.
+          </p>
+        </div>
+
+        <button onclick="saveItem()">Guardar elemento</button>
+        <button class="danger" onclick="deleteItem()">Borrar elemento</button>
+
+        <p class="hint">
+          Click en el mapa rellena X/Y. Los approach y transit se pueden arrastrar.
+          Transit no guarda theta.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Zona prohibida</h2>
+
+        <label>Nombre</label>
+        <input id="forbiddenName" type="text" value="ZonaProhibida1">
+
+        <div class="row">
+          <div>
+            <label>X altura</label>
+            <input id="forbiddenX" type="number" step="1" value="850">
+          </div>
+          <div>
+            <label>Y anchura</label>
+            <input id="forbiddenY" type="number" step="1" value="1100">
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Tamaño X / W</label>
+            <input id="forbiddenW" type="number" step="1" value="500">
+          </div>
+          <div>
+            <label>Tamaño Y / H</label>
+            <input id="forbiddenH" type="number" step="1" value="700">
+          </div>
+        </div>
+
+        <button class="primary" onclick="saveForbiddenZone()">Guardar zona prohibida</button>
+        <button class="danger" onclick="deleteForbiddenZone()">Borrar zona prohibida</button>
+
+        <p class="hint">
+          La zona roja fuerte es la zona real. La zona roja suave es la zona inflada:
+          ahí no puede entrar el centro del robot para que el área completa del robot no pise la zona prohibida.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Fondo mapa</h2>
+
+        <label>
+          <input id="bgEnabled" type="checkbox">
+          Mostrar imagen de fondo
+        </label>
+
+        <label>URL imagen</label>
+        <input id="bgUrl" type="text" value="/web/map_background.png">
+
+        <div class="row">
+          <div>
+            <label>Offset X px</label>
+            <input id="bgOffsetX" type="number" step="1" value="0">
+          </div>
+          <div>
+            <label>Offset Y px</label>
+            <input id="bgOffsetY" type="number" step="1" value="0">
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Escala</label>
+            <input id="bgScale" type="number" step="0.01" value="1.0">
+          </div>
+          <div>
+            <label>Opacidad</label>
+            <input id="bgOpacity" type="number" step="0.05" min="0" max="1" value="0.35">
+          </div>
+        </div>
+
+        <button class="primary" onclick="saveBackgroundConfig()">Guardar fondo</button>
+        <button onclick="loadBackgroundFromMap()">Recargar fondo</button>
+
+        <p class="hint">
+          Coloca la imagen como /web/map_background.png. Ajusta offset, escala y opacidad hasta que cuadre con la cuadrícula.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Robot</h2>
+        <button class="primary" onclick="resetRobotStart()">Reset robot a START</button>
+        <button onclick="reloadMap()">Recargar mapa</button>
+        <button onclick="downloadMap()">Ver JSON mapa</button>
+        <button onclick="refreshState()">Actualizar estado</button>
+        <div class="small-status" id="robotState">Sin estado.</div>
+      </section>
+
+      <section class="card">
+        <h2>IMU / Orientación</h2>
+
+        <label>
+          <input id="imuUseTurning" type="checkbox" checked>
+          Usar IMU para giros
+        </label>
+
+        <label>Offset yaw IMU</label>
+        <input id="imuYawOffset" type="number" step="0.01" value="-11.81">
+
+        <label>Tolerancia yaw grados</label>
+        <input id="imuYawTolerance" type="number" step="0.1" min="0.5" value="2.0">
+
+        <div class="row">
+          <div>
+            <label>W min</label>
+            <input id="imuMinAngularSpeed" type="number" step="0.01" min="0.01" value="0.06">
+          </div>
+          <div>
+            <label>W max</label>
+            <input id="imuMaxAngularSpeed" type="number" step="0.01" min="0.01" value="0.15">
+          </div>
+        </div>
+
+        <label>Kp giro</label>
+        <input id="imuAngularKp" type="number" step="0.001" min="0.001" value="0.012">
+
+        <label>
+          <input id="imuAngularInverted" type="checkbox" checked>
+          Invertir signo angular
+        </label>
+
+        <button class="primary" onclick="saveIMUConfig()">Guardar IMU</button>
+
+        <div class="small-status" id="imuState">
+          IMU pendiente.
+        </div>
+
+        <p class="hint">
+          Si en START físico la IMU marca -11.81°, el offset debe ser -11.81 para que el mapa sea 0°.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Brazo</h2>
+        <button onclick="armPlaceholder('home')">HOME</button>
+        <button onclick="armPlaceholder('pick')">PICK</button>
+        <button onclick="armPlaceholder('place')">PLACE</button>
+        <p class="hint">
+          Control manual del brazo mediante arm_server.py.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Vacuum</h2>
+        <button class="execute" onclick="vacuumAction('on')">VACUUM ON</button>
+        <button class="danger" onclick="vacuumAction('off')">VACUUM OFF</button>
+        <button onclick="vacuumAction('status')">STATUS VACUUM</button>
+
+        <div class="small-status" id="vacuumState">
+          Vacuum pendiente.
+        </div>
+
+        <p class="hint">
+          El vacuum se manda por /robot/vacuum_command y el puente del Arduino envía v1/v0.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Leyenda</h2>
+        <div class="legend">
+          <span class="box orange"></span> Robot / START<br>
+          <span class="box black"></span> Almacenes<br>
+          <span class="box green"></span> Despensas<br>
+          <span class="dot blue"></span> Approach almacén / pick<br>
+          <span class="dot lime"></span> Approach despensa / drop<br>
+          <span class="dot red"></span> Transit<br>
+          <span class="line blueLine"></span> Ruta planificada
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Estado</h2>
+        <pre id="statusBox">Cargando...</pre>
+      </section>
+
+    </aside>
+  </main>
+
+  <script src="/web/app.js"></script>
+</body>
+</html>
