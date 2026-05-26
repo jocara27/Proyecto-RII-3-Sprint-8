@@ -1,0 +1,11 @@
+{
+  "pose": {
+    "x": 195.643,
+    "y": 2754.389,
+    "theta_deg": -0.81
+  },
+  "linear_speed": 0.2,
+  "angular_speed": 0.3,
+  "slow_pick_speed": 0.015,
+  "last_action": "Base actualizada"
+}

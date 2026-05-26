@@ -1,0 +1,186 @@
+{
+  "board": {
+    "height_x_mm": 2000,
+    "width_y_mm": 3000,
+    "origin": "bottom_right",
+    "x_positive": "up",
+    "y_positive": "left"
+  },
+  "robot": {
+    "length_x_mm": 230,
+    "width_y_mm": 250,
+    "safety_margin_mm": 50
+  },
+  "fixed_sizes": {
+    "almacen": {
+      "x_size_mm": 250,
+      "y_size_mm": 100
+    },
+    "despensa": {
+      "x_size_mm": 200,
+      "y_size_mm": 200
+    }
+  },
+  "start": {
+    "x": 215,
+    "y": 2775,
+    "theta_deg": 0
+  },
+  "almacenes": {
+    "Almacen1": {
+      "x": 700,
+      "y": 2750,
+      "w": 200,
+      "h": 100
+    },
+    "Almacen2": {
+      "x": 1500,
+      "y": 2750,
+      "w": 200,
+      "h": 100
+    },
+    "Almacen8": {
+      "x": 709,
+      "y": 150,
+      "w": 200,
+      "h": 100
+    },
+    "Almacen7": {
+      "x": 1502,
+      "y": 154,
+      "w": 200,
+      "h": 100
+    },
+    "Almacen3": {
+      "x": 1753,
+      "y": 1796,
+      "w": 100,
+      "h": 200
+    },
+    "Almacen4": {
+      "x": 1134,
+      "y": 1751,
+      "w": 100,
+      "h": 200
+    },
+    "Almacen5": {
+      "x": 1761,
+      "y": 1001,
+      "w": 100,
+      "h": 200
+    },
+    "Almacen6": {
+      "x": 1138,
+      "y": 1058,
+      "w": 100,
+      "h": 200
+    }
+  },
+  "despensas": {
+    "Despensa2": {
+      "x": 1801,
+      "y": 2197,
+      "w": 200,
+      "h": 200
+    },
+    "Despensa1": {
+      "x": 1109,
+      "y": 2798,
+      "w": 200,
+      "h": 200
+    },
+    "Despensa3": {
+      "x": 1101,
+      "y": 2096,
+      "w": 200,
+      "h": 200
+    },
+    "Despensa4": {
+      "x": 1797,
+      "y": 1403,
+      "w": 200,
+      "h": 200
+    },
+    "Despensa5": {
+      "x": 1109,
+      "y": 1403,
+      "w": 200,
+      "h": 200
+    },
+    "Despensa6": {
+      "x": 1801,
+      "y": 608,
+      "w": 200,
+      "h": 200
+    },
+    "Despensa7": {
+      "x": 1105,
+      "y": 8,
+      "w": 200,
+      "h": 200
+    },
+    "Despensa8": {
+      "x": 1105,
+      "y": 705,
+      "w": 200,
+      "h": 200
+    }
+  },
+  "approach_almacenes": {
+    "Palm1": {
+      "x": 780,
+      "y": 2500,
+      "theta_deg": 90
+    },
+    "Palm2": {
+      "x": 1597,
+      "y": 2589,
+      "theta_deg": 90
+    }
+  },
+  "approach_despensas": {
+    "Desp1": {
+      "x": 1200,
+      "y": 2650,
+      "theta_deg": 90
+    },
+    "Desp2": {
+      "x": 1652,
+      "y": 2299,
+      "theta_deg": 0
+    }
+  },
+  "transit": {},
+  "forbidden_zones": {
+    "ZonaProhibida1": {
+      "x": 0.0,
+      "y": 600.0,
+      "w": 450.0,
+      "h": 1800.0
+    }
+  },
+  "mission_sequence": [
+    {
+      "storage": "Palm1",
+      "pantry": "Desp1",
+      "from_previous_transit": [],
+      "storage_to_pantry_transit": [],
+      "pantry_to_home_transit": []
+    },
+    {
+      "storage": "Palm2",
+      "pantry": "Desp2",
+      "from_previous_transit": [],
+      "storage_to_pantry_transit": [],
+      "pantry_to_home_transit": []
+    }
+  ],
+  "background_image": {
+    "enabled": true,
+    "url": "/web/map_background.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "scale": 1.0,
+    "opacity": 0.35
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "use_imu_turning": true,
+  "imu_yaw_offset_deg": -114.30999755859375,
+  "imu_yaw_tolerance_deg": 0.5,
+  "min_angular_speed": 0.05,
+  "max_angular_speed": 0.16,
+  "angular_kp": 0.01,
+  "angular_command_inverted": true,
+  "heading_hold_kp": 0.012,
+  "heading_hold_max_correction": 0.1,
+  "last_zero_raw_yaw_deg": -114.30999755859375,
+  "last_zero_time": "2026-05-22 11:47:07"
+}
